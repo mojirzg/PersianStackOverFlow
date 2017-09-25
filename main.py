@@ -1,6 +1,10 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
+                          ConversationHandler)
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import logging
 import config
+import database as db
+import conversation as CN
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -9,14 +13,24 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-# Define a few command handlers. These usually take the two arguments bot and
-# update. Error handlers also receive the raised TelegramError object in error.
 def start(bot, update):
-    update.message.reply_text('Hi!')
+    update.message.reply_text('متن خوش آمد گویی')
+    chatid = update.message.chat_id
+    if db.UserName.get_username(chatid):
+        print(db.UserName.get_username(chatid))
+        update.message.reply_text('سوال خود را بپرسید')
+        pass
+    else:
+        reply_keyboard = [['/user']]
+        update.message.reply_text('یوزر را ارسال کنید /user',
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
 
 
 def help(bot, update):
-    update.message.reply_text('Help!')
+    db.droptable()
+    print("info table dropped")
+    update.message.reply_text("info table dropped")
 
 
 def echo(bot, update):
@@ -37,10 +51,28 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
+    # region conversation handler
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('user', CN.start)],
 
-    # on noncommand i.e message - echo the message on Telegram
+        states={
+            CN.flag_yes: [RegexHandler('^(بله)$', CN.flag_yes),
+                          RegexHandler('^(خیر)$', CN.flag_no)],
+
+            CN.lan: [RegexHandler('^(Python|Photoshop|C#)$', CN.lan),
+                     CommandHandler('done', CN.lan_done)],
+
+            CN.lan_done: [RegexHandler('^(خیر)$', CN.lan),
+                          RegexHandler('^(بله)$', CN.check)],
+
+        },
+
+        fallbacks=[CommandHandler('cancel', CN.cancel)]
+    )
+
+    dp.add_handler(conv_handler)
+    # endregion
     dp.add_handler(MessageHandler(Filters.text, echo))
-
     # log all errors
     dp.add_error_handler(error)
 
