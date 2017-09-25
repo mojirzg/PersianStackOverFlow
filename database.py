@@ -1,8 +1,5 @@
-import psycopg2
 import config
-conn = psycopg2.connect(host='localhost', database='postgres', user='postgres', password=config.dbpassword)
-print("Connecting to database\n	")
-
-cursor = conn.cursor()
-print("Connected!\n")
+import dataset
+conn = dataset.connect('postgresql://postgres:%s@localhost:5432/postgres', config.dbpassword)
+print("database connection OK...")
 
