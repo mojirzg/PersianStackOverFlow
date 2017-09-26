@@ -1,7 +1,7 @@
 import config
 import dataset
 
-db = dataset.connect('postgresql://postgres:{}6654@localhost/postgres'.format(config.dbpassword))
+db = dataset.connect('postgresql://postgres:{}@localhost/postgres'.format(config.dbpassword))
 print("database connection OK...")
 
 

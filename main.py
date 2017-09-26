@@ -2,7 +2,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
                           ConversationHandler)
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import logging
-import config
+# import config
 import database as db
 import conversation as CN
 
@@ -33,17 +33,13 @@ def help(bot, update):
     update.message.reply_text("info table dropped")
 
 
-def echo(bot, update):
-    update.message.reply_text(update.message.text)
-
-
 def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"' % (update, error))
 
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater(config.token)
+    updater = Updater('457322349:AAGX7G-k9uyErrDO2CoBi4qKeC3FRe2zJS4')
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -60,7 +56,8 @@ def main():
                           RegexHandler('^(خیر)$', CN.flag_no)],
 
             CN.lan: [RegexHandler('^(Python|Photoshop|C#)$', CN.lan),
-                     CommandHandler('done', CN.lan_done)],
+                     CommandHandler('Done', CN.lan_done),
+                     CommandHandler('Cancel', CN.lan_cancel)],
 
             CN.lan_done: [RegexHandler('^(خیر)$', CN.lan),
                           RegexHandler('^(بله)$', CN.check)],
@@ -72,7 +69,6 @@ def main():
 
     dp.add_handler(conv_handler)
     # endregion
-    dp.add_handler(MessageHandler(Filters.text, echo))
     # log all errors
     dp.add_error_handler(error)
 

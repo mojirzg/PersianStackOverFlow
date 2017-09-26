@@ -42,13 +42,7 @@ def flag_no(bot, update):
 
 
 def lan(bot, update):
-    reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/done']]
-    if update.message.text == 'No':
-        langs.clear()
-        update.message.reply_text('موارد قبلی پاک شد لطفا دوباره انتخاب کنید',
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard,
-                                                                   one_time_keyboard=True, resize_keyboard=True))
-        return lan
+    reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/Done', '/Cancel']]
     if update.message.text in langs:
         bot.send_message(chat_id=update.message.chat_id, text="قبلا انتخاب شده",
                          show_alert=True)
@@ -71,6 +65,12 @@ def lan_done(bot, update):
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
     return lan_done
+
+
+def lan_cancel(bot, update):
+    langs.clear()
+    update.message.reply_text('موارد قبلی پاک شد لطفا دوباره انتخاب کنید')
+    return lan
 
 
 def check(bot, update):
