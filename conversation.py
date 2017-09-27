@@ -5,7 +5,8 @@ from telegram.ext import ConversationHandler
 import database as db
 
 
-# region frist
+# region first
+
 langs = []
 
 
@@ -72,8 +73,12 @@ def lan_done(bot, update):
 
 
 def lan_cancel(bot, update):
+    reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/Done', '/Cancel']]
     langs.clear()
-    update.message.reply_text('موارد قبلی پاک شد لطفا دوباره انتخاب کنید')
+    update.message.reply_text('موارد قبلی پاک شد لطفا دوباره انتخاب کنید',
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                               one_time_keyboard=True, resize_keyboard=True))
+
     return lan
 
 
@@ -102,7 +107,7 @@ conv_handler = ConversationHandler(
                   CommandHandler('Done', lan_done),
                   CommandHandler('Cancel', lan_cancel)],
 
-            lan_done: [RegexHandler('^(خیر)$', lan),
+            lan_done: [RegexHandler('^(خیر)$', lan_cancel),
                        RegexHandler('^(بله)$', check)],
 
         },
@@ -110,3 +115,4 @@ conv_handler = ConversationHandler(
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 # endregion
+
