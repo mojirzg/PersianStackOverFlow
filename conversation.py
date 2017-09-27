@@ -1,7 +1,11 @@
-from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
+                          ConversationHandler)
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
 import database as db
 
+
+# region frist
 langs = []
 
 
@@ -85,3 +89,24 @@ def cancel(bot, update):
     user = update.message.from_user
     print("User %s canceled the conversation." % user.first_name)
     return ConversationHandler.END
+
+
+conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('user', start)],
+
+        states={
+            flag_yes: [RegexHandler('^(بله)$', flag_yes),
+                       RegexHandler('^(خیر)$', flag_no)],
+
+            lan: [RegexHandler('^(Python|Photoshop|C#)$', lan),
+                  CommandHandler('Done', lan_done),
+                  CommandHandler('Cancel', lan_cancel)],
+
+            lan_done: [RegexHandler('^(خیر)$', lan),
+                       RegexHandler('^(بله)$', check)],
+
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+# endregion

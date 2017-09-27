@@ -2,9 +2,9 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
                           ConversationHandler)
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import logging
-# import config
+import config
 import database as db
-import conversation as CN
+import conversation as cn
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -39,7 +39,7 @@ def error(bot, update, error):
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater('457322349:AAGX7G-k9uyErrDO2CoBi4qKeC3FRe2zJS4')
+    updater = Updater(config.token)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -48,26 +48,8 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     # region conversation handler
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('user', CN.start)],
 
-        states={
-            CN.flag_yes: [RegexHandler('^(بله)$', CN.flag_yes),
-                          RegexHandler('^(خیر)$', CN.flag_no)],
-
-            CN.lan: [RegexHandler('^(Python|Photoshop|C#)$', CN.lan),
-                     CommandHandler('Done', CN.lan_done),
-                     CommandHandler('Cancel', CN.lan_cancel)],
-
-            CN.lan_done: [RegexHandler('^(خیر)$', CN.lan),
-                          RegexHandler('^(بله)$', CN.check)],
-
-        },
-
-        fallbacks=[CommandHandler('cancel', CN.cancel)]
-    )
-
-    dp.add_handler(conv_handler)
+    dp.add_handler(cn.conv_handler)
     # endregion
     # log all errors
     dp.add_error_handler(error)
