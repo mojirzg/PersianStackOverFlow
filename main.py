@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 def start(bot, update):
     update.message.reply_text('متن خوش آمد گویی')
     chatid = update.message.chat_id
-    if db.UserName.get_username(chatid):
-        print(db.UserName.get_username(chatid))
+    if db.get_username(chatid):
+        print(db.get_username(chatid))
         update.message.reply_text('سوال خود را بپرسید')
         pass
     else:

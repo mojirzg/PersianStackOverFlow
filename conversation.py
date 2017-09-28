@@ -7,16 +7,12 @@ import database as db
 
 # region first
 
-langs = []
-
 
 def start(bot, update):
     reply_keyboard = [['خیر', 'بله']]
-
     update.message.reply_text(
         "آیا مایل به پاسخ دادن سوال دیگران هستید؟",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
-
     return flag_yes
 
 
@@ -29,8 +25,7 @@ def flag_yes(bot, update):
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
 
-    global flag
-    flag = True
+    db.add_username(update.message.chat_id, '', True, 0, 0, 0, )
     return lan
 
 
@@ -41,22 +36,21 @@ def flag_no(bot, update):
     update.message.reply_text("لطفا موارد مورد نظر خود را انتخاب کنید ",
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
-    global flag
-    flag = False
+    db.add_username(update.message.chat_id, '', False, 0, 0, 0, )
     return lan
 
 
 def lan(bot, update):
     reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/Done', '/Cancel']]
-    if update.message.text in langs:
-        bot.send_message(chat_id=update.message.chat_id, text="قبلا انتخاب شده",
-                         show_alert=True)
+    if update.message.text in db.change('get', update.message.chat_id, None):
+        bot.send_message(chat_id=update.message.chat_id, text="قبلا انتخاب شده")
         update.message.reply_text("اگر انتخاب شما تمام شده /done را ارسال کنید",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                    one_time_keyboard=True, resize_keyboard=True))
         return lan
     else:
-        langs.append(update.message.text)
+        db.change('lang', update.message.chat_id, lan=update.message.text)
+        print(db.get_username(update.message.chat_id))
         update.message.reply_text("اگر انتخاب شما تمام شده /done را ارسال کنید",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                    one_time_keyboard=True, resize_keyboard=True))
@@ -64,7 +58,7 @@ def lan(bot, update):
 
 def lan_done(bot, update):
     reply_keyboard = [['خیر', 'بله']]
-    update.message.reply_text("موارد انتخابی شما:\n" + str(langs),
+    update.message.reply_text("موارد انتخابی شما:\n" + str(db.change('get', update.message.chat_id, None)),
                               replay_markup=ReplyKeyboardRemove())
     update.message.reply_text("آیا درست است؟",
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
@@ -74,7 +68,7 @@ def lan_done(bot, update):
 
 def lan_cancel(bot, update):
     reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/Done', '/Cancel']]
-    langs.clear()
+    db.change('del', update.message.chat_id, None)
     update.message.reply_text('موارد قبلی پاک شد لطفا دوباره انتخاب کنید',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
@@ -85,8 +79,7 @@ def lan_cancel(bot, update):
 def check(bot, update):
     if update.message.text == 'بله':
         update.message.reply_text('اطلاعات شما ثبت شد میتوانید سوال خود را بپرسید', reply_markup=ReplyKeyboardRemove())
-        user = db.UserName(update.message.chat_id, str(langs), flag, 0, 0, 0)
-        db.UserName.add_username(user)
+        db.get_username(update.message.chat_id)
         return ConversationHandler.END
 
 
