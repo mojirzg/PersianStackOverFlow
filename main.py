@@ -17,8 +17,11 @@ def start(bot, update):
     update.message.reply_text('متن خوش آمد گویی')
     chatid = update.message.chat_id
     if db.get_username(chatid):
+        reply_keyboard = [['/ask']]
         print(db.get_username(chatid))
-        update.message.reply_text('سوال خود را بپرسید')
+        update.message.reply_text('ّبرای پرسیدن سوال /ask را ارسال کنید',
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
         pass
     else:
         reply_keyboard = [['/user']]
@@ -32,6 +35,13 @@ def help(bot, update):
     print("info table dropped")
     update.message.reply_text("info table dropped")
 
+
+def data(bot, update):
+    print(db.get(update.message.chat_id))
+
+
+def text(bot, update):
+    update.message.reply_text(update.message.text)
 
 def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"' % (update, error))
@@ -47,8 +57,10 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("d", data))
+    #dp.add_handler(MessageHandler(Filters.text, text))
     # region conversation handler
-
+    dp.add_handler(cn.conv_handler_question)
     dp.add_handler(cn.conv_handler)
     # endregion
     # log all errors

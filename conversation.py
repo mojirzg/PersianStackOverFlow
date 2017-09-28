@@ -5,7 +5,7 @@ from telegram.ext import ConversationHandler
 import database as db
 
 
-# region first
+# region First
 
 
 def start(bot, update):
@@ -107,5 +107,64 @@ conv_handler = ConversationHandler(
 
         fallbacks=[CommandHandler('cancel', cancel)]
     )
+# endregion
+
+# region Question
+
+
+def start_question(bot, update):
+    result = db.change('get', update.message.chat_id, None).split(',')
+    reply_keyboard = [result]
+    update.message.reply_text(
+        "سوال در مور چه مبحثی است",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
+
+    return language
+
+
+def language(bot, update):
+    print(db.who_to_ask(update.message.text))
+    db.change_question('asked', update.message.chat_id, db.who_to_ask(update.message.text))
+    update.message.reply_text("موضوع سوال شما چیست؟ ",
+                              reply_markup=ReplyKeyboardRemove())
+
+    return subject
+
+
+def subject(bot, update):
+    db.change_question('subject', update.message.chat_id, update.message.text)
+    update.message.reply_text("متن سوال را بفرساید")
+    return text
+
+
+def text(bot, update):
+    db.change_question('text', update.message.chat_id, update.message.text)
+    return ok
+
+
+def ok(bot, update):
+    print(db.get(update.message.chat_id))
+    return ConversationHandler.END
+
+
+def cancel2(bot, update):
+    user = update.message.from_user
+    print("User %s canceled the conversation." % user.first_name)
+    return ConversationHandler.END
+
+
+conv_handler_question = ConversationHandler(
+        entry_points=[CommandHandler('ask', start_question)],
+
+        states={
+            language: [RegexHandler('^(Python|Photoshop|C#)$', language)],
+
+            subject: [MessageHandler(Filters.text, subject)],
+
+            text: [MessageHandler(Filters.text, text)]
+
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel2)])
 # endregion
 
