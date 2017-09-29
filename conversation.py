@@ -124,7 +124,7 @@ def start_question(bot, update):
 
 
 def language(bot, update):
-    db.change_question('lan',update.message.chat_id, update.message.text)
+    db.change_question('lan', update.message.chat_id, update.message.text)
     db.change_question('asked', update.message.chat_id, db.who_to_ask(update.message.text))
     update.message.reply_text("موضوع سوال شما چیست؟ ",
                               reply_markup=ReplyKeyboardRemove())
@@ -134,7 +134,7 @@ def language(bot, update):
 
 def subject(bot, update):
     db.change_question('subject', update.message.chat_id, update.message.text)
-    update.message.reply_text("متن سوال را بفرساید")
+    update.message.reply_text("متن سوال را بفرستید")
     return text
 
 
@@ -155,14 +155,13 @@ def send(bot, update):
     result = db.get(update.message.chat_id)
     send_message = result['asked'][1:len(result['asked'])-1].split(',')
     for ID in send_message:
-        if update.message.chat_id == ID: # don't send for yourself
-            pass
-        elif datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2):
+        if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
+                                                    str(update.message.chat_id) != ID:
             # don't send if last send was before 2 minutes
-            print("not passed")
+            print(ID, "not passed")
             bot.send_message(chat_id=ID, text='مبحث : ' + result['lan'] +
-                                              '\nموضوع : ' + result['subject'] +
-                                              '\nمتن : ' + result['qtext'])
+                                                  '\nموضوع : ' + result['subject'] +
+                                                  '\nمتن : ' + result['qtext'])
             db.change('time', ID, datetime.datetime.now())
             update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
         else:
