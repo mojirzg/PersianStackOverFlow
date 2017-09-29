@@ -3,7 +3,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
 import database as db
-
+import datetime
 
 # region First
 
@@ -25,7 +25,7 @@ def flag_yes(bot, update):
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
 
-    db.add_username(update.message.chat_id, '', True, 0, 0, 0, )
+    db.add_username(update.message.chat_id, '', True, datetime.datetime.now(), 0, 0, )
     return lan
 
 
@@ -49,7 +49,7 @@ def lan(bot, update):
                                                                    one_time_keyboard=True, resize_keyboard=True))
         return lan
     else:
-        db.change('lang', update.message.chat_id, lan=update.message.text)
+        db.change('lang', update.message.chat_id, update.message.text)
         print(db.get_username(update.message.chat_id))
         update.message.reply_text("اگر انتخاب شما تمام شده /done را ارسال کنید",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard,
@@ -115,6 +115,7 @@ conv_handler = ConversationHandler(
 def start_question(bot, update):
     result = db.change('get', update.message.chat_id, None).split(',')
     reply_keyboard = [result]
+    db.question_add_id(update.message.chat_id)
     update.message.reply_text(
         "سوال در مور چه مبحثی است",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
@@ -123,7 +124,7 @@ def start_question(bot, update):
 
 
 def language(bot, update):
-    print(db.who_to_ask(update.message.text))
+    db.change_question('lan',update.message.chat_id, update.message.text)
     db.change_question('asked', update.message.chat_id, db.who_to_ask(update.message.text))
     update.message.reply_text("موضوع سوال شما چیست؟ ",
                               reply_markup=ReplyKeyboardRemove())
@@ -139,11 +140,33 @@ def subject(bot, update):
 
 def text(bot, update):
     db.change_question('text', update.message.chat_id, update.message.text)
-    return ok
+    result = db.get(update.message.chat_id)
+    reply_keyboard = [['cancel', 'ok']]
+    update.message.reply_text('مبحث : ' + result['lan'] +
+                              '\nموضوع : ' + result['subject'] +
+                              '\nمتن : ' + result['qtext'] +
+                              '\nبرای ارسال ok و برای ویرایش cancel را ارسال کنید',
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                               one_time_keyboard=True, resize_keyboard=True))
+    return send
 
 
-def ok(bot, update):
-    print(db.get(update.message.chat_id))
+def send(bot, update):
+    result = db.get(update.message.chat_id)
+    send_message = result['asked'][1:len(result['asked'])-1].split(',')
+    for ID in send_message:
+        if update.message.chat_id == ID: # don't send for yourself
+            pass
+        elif datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2):
+            # don't send if last send was before 2 minutes
+            print("not passed")
+            bot.send_message(chat_id=ID, text='مبحث : ' + result['lan'] +
+                                              '\nموضوع : ' + result['subject'] +
+                                              '\nمتن : ' + result['qtext'])
+            db.change('time', ID, datetime.datetime.now())
+            update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
+        else:
+            print("no one to send")
     return ConversationHandler.END
 
 
@@ -161,7 +184,10 @@ conv_handler_question = ConversationHandler(
 
             subject: [MessageHandler(Filters.text, subject)],
 
-            text: [MessageHandler(Filters.text, text)]
+            text: [MessageHandler(Filters.text, text)],
+
+            send: [RegexHandler('^(ok)$', send),
+                   RegexHandler('^(cancel)$', cancel2)]
 
         },
 

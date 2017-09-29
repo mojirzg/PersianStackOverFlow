@@ -5,6 +5,7 @@ import logging
 import config
 import database as db
 import conversation as cn
+import datetime
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,11 +38,18 @@ def help(bot, update):
 
 
 def data(bot, update):
-    print(db.get(update.message.chat_id))
+    y = datetime.datetime.now()
+    print(y)
+    x = datetime.datetime.now()
+    print(x)
+    print(x - y)
+    if x - y > datetime.timedelta(minutes=1):
+        print("ok, 60 seconds have passed")
 
 
 def text(bot, update):
-    update.message.reply_text(update.message.text)
+    update.message.reply_text(str(update.message.text))
+
 
 def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"' % (update, error))
