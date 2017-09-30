@@ -5,7 +5,8 @@ from telegram.ext import ConversationHandler
 import database as db
 import datetime
 
-# region First
+
+# region First time
 
 
 def start(bot, update):
@@ -77,8 +78,11 @@ def lan_cancel(bot, update):
 
 
 def check(bot, update):
+    reply_keyboard = [['/ask']]
     if update.message.text == 'بله':
-        update.message.reply_text('اطلاعات شما ثبت شد میتوانید سوال خود را بپرسید', reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text('اطلاعات شما ثبت شد میتوانید سوال خود را بپرسید',
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keybord=True))
         db.get_username(update.message.chat_id)
         return ConversationHandler.END
 
@@ -90,23 +94,25 @@ def cancel(bot, update):
 
 
 conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('user', start)],
+    entry_points=[CommandHandler('user', start)],
 
-        states={
-            flag_yes: [RegexHandler('^(بله)$', flag_yes),
-                       RegexHandler('^(خیر)$', flag_no)],
+    states={
+        flag_yes: [RegexHandler('^(بله)$', flag_yes),
+                   RegexHandler('^(خیر)$', flag_no)],
 
-            lan: [RegexHandler('^(Python|Photoshop|C#)$', lan),
-                  CommandHandler('Done', lan_done),
-                  CommandHandler('Cancel', lan_cancel)],
+        lan: [RegexHandler('^(Python|Photoshop|C#)$', lan),
+              CommandHandler('Done', lan_done),
+              CommandHandler('Cancel', lan_cancel)],
 
-            lan_done: [RegexHandler('^(خیر)$', lan_cancel),
-                       RegexHandler('^(بله)$', check)],
+        lan_done: [RegexHandler('^(خیر)$', lan_cancel),
+                   RegexHandler('^(بله)$', check)],
 
-        },
+    },
 
-        fallbacks=[CommandHandler('cancel', cancel)]
-    )
+    fallbacks=[CommandHandler('cancel', cancel)]
+)
+
+
 # endregion
 
 # region Question
@@ -153,19 +159,21 @@ def text(bot, update):
 
 def send(bot, update):
     result = db.get(update.message.chat_id)
-    send_message = result['asked'][1:len(result['asked'])-1].split(',')
+    send_message = result['asked'][1:len(result['asked']) - 1].split(',')
     for ID in send_message:
         if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
-                                                    str(update.message.chat_id) != ID:
+                        str(update.message.chat_id) != ID:
             # don't send if last send was before 2 minutes
             print(ID, "not passed")
-            bot.send_message(chat_id=ID, text='مبحث : ' + result['lan'] +
+            s = bot.send_message(chat_id=ID, text='ID : [' + str(result['id']) + ']'
+                                                                                 '\nمبحث : ' + result['lan'] +
                                                   '\nموضوع : ' + result['subject'] +
                                                   '\nمتن : ' + result['qtext'])
+            print(s.message_id)
             db.change('time', ID, datetime.datetime.now())
-            update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
         else:
             print("no one to send")
+    update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 
@@ -176,20 +184,23 @@ def cancel2(bot, update):
 
 
 conv_handler_question = ConversationHandler(
-        entry_points=[CommandHandler('ask', start_question)],
+    entry_points=[CommandHandler('ask', start_question)],
 
-        states={
-            language: [RegexHandler('^(Python|Photoshop|C#)$', language)],
+    states={
+        language: [RegexHandler('^(Python|Photoshop|C#)$', language)],
 
-            subject: [MessageHandler(Filters.text, subject)],
+        subject: [MessageHandler(Filters.text, subject)],
 
-            text: [MessageHandler(Filters.text, text)],
+        text: [MessageHandler(Filters.text, text)],
 
-            send: [RegexHandler('^(ok)$', send),
-                   RegexHandler('^(cancel)$', cancel2)]
+        send: [RegexHandler('^(ok)$', send),
+               RegexHandler('^(cancel)$', cancel2)]
 
-        },
+    },
 
-        fallbacks=[CommandHandler('cancel', cancel2)])
+    fallbacks=[CommandHandler('cancel', cancel2)])
 # endregion
 
+# todo if user conv is not finished delete the row
+# todo reply button for like dislike and report
+# todo add like and dislike for each answer

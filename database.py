@@ -2,10 +2,13 @@ import config
 import dataset
 import psycopg2
 
+# region Connection
 db = dataset.connect('postgresql://postgres:{}@localhost/postgres'.format(config.dbpassword))
 print("database connection OK...")
-conn = psycopg2.connect(host='localhost', database='postgres', user='postgres', password=config.dbpassword)
-cursor = conn.cursor()
+
+
+# endregion
+
 # region username
 
 
@@ -30,7 +33,7 @@ def change(op, chatid, arg):
         table.update(dict(chatid=chatid, lang=user['lang'] + arg + ','), ['chatid'])
     elif op == 'get':
         user = table.find_one(chatid=chatid)
-        return user['lang'][:len(user['lang'])-1]
+        return user['lang'][:len(user['lang']) - 1]
     elif op == 'del':
         table.update(dict(chatid=chatid, lang=''), ['chatid'])
     elif op == 'time':
@@ -41,17 +44,6 @@ def change(op, chatid, arg):
 
 
 # endregion
-
-
-def who_to_ask(lan):
-    table = db['info']
-    result = table.find(flag=True)
-    user = []
-    for row in result:
-        if lan in row['lang'][:len(row['lang']) - 1]:
-            user.append(row['chatid'])
-    return user
-
 
 # region Questions
 
@@ -77,15 +69,27 @@ def get(chatid):
     table = db['questions']
     result = table.find_one(chatid=chatid)
     return result
+
+
+def question_by_id(ID):  # to Find the chat id of the one who asked the question
+    table = db['questions']
+    result = table.find_one(id=ID)
+    return result['chatid']
+
+
+def who_to_ask(lan):
+    table = db['info']
+    result = table.find(flag=True)
+    user = []
+    for row in result:
+        if lan in row['lang'][:len(row['lang']) - 1]:
+            user.append(row['chatid'])
+    return user
+
+
 # endregion
 
 
 def droptable():
-    table = db['info']
+    table = db['']
     table.drop()
-
-def droptable2():
-    table = db['info']
-    table.drop()
-
-

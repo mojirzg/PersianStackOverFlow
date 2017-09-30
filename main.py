@@ -37,6 +37,14 @@ def help(bot, update):
     update.message.reply_text("info table dropped")
 
 
+def answer(bot, update):
+    q_text = update.message.reply_to_message.text  # text of the question
+    if 'ID' in q_text:
+        x = q_text.index(']')
+        bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=update.message.text)
+        # send the answer
+
+
 def data(bot, update):
     y = datetime.datetime.now()
     print(y)
@@ -65,21 +73,20 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("d", data))
-    #dp.add_handler(MessageHandler(Filters.text, text))
+    dp.add_handler(CommandHandler("d", data))  # for test purposes
+
     # region conversation handler
     dp.add_handler(cn.conv_handler_question)
     dp.add_handler(cn.conv_handler)
     # endregion
+
+    dp.add_handler(MessageHandler(Filters.reply, answer))  # for answers
     # log all errors
     dp.add_error_handler(error)
 
     # Start the Bot
     updater.start_polling()
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
