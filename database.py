@@ -9,13 +9,26 @@ print("database connection OK...")
 
 # endregion
 
+# region Databasae Info
+
+def database_info():
+    r = '\033[91m'
+    b = '\033[94m'
+    d = '\033[00m'
+    #db['info'].drop()
+    print(r, 'tables:', db.tables)
+    print(b, 'info:', db['info'].columns)
+    print(b, 'questions:', db['questions'].columns , d)
+
+# endregion
+
 # region username
 
 
 def add_username(chatid, flag, last_ans):
     table = db['info']
     table.insert(dict(chatid=chatid, lang='', flag=flag, lastans=last_ans, like=0,
-                      report=0, ban=0))
+                      report=0, ban=0 , status=0))
     print("username added successfully")
 
 
@@ -51,6 +64,7 @@ def change(op, chatid, arg):
         report = int(result['report']) + 1
         table.update(dict(chatid=chatid, report=report), ['chatid'])
         return report
+
 
 # endregion
 

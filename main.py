@@ -12,6 +12,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+
 # region menu
 
 
@@ -51,17 +52,25 @@ def callback(bot, update):
 
 def start(bot, update):
     update.message.reply_text('متن خوش آمد گویی')
+    print(update.message.chat_id)
     chatid = update.message.chat_id
     if db.get_username(chatid):
-        reply_keyboard = [['/ask']]
-        update.message.reply_text('ّبرای پرسیدن سوال /ask را ارسال کنید',
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+        a = db.db['info'].find_one(chatid=update.message.chat_id)
+        if a['status'] == 1:
+            reply_keyboard = [['/ask']]
+            update.message.reply_text('برای پرسیدن سوال /ask را ارسال کنید',
+                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                       resize_keyboard=True))
+            pass
+        else:
+            reply_keyboard = [['/user']]
+            update.message.reply_text('ثبت نام شما کامل نیست لطفا با دستور /user مجددا ثبت نام کنید',
+                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
                                                                    resize_keyboard=True))
-        pass
     else:
         reply_keyboard = [['/user']]
         update.message.reply_text('یوزر را ارسال کنید /user',
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                  reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
                                                                    resize_keyboard=True))
 
 
@@ -118,6 +127,8 @@ def main():
     # Create the EventHandler and pass it your bot's token.
     updater = Updater(config.token)
 
+    db.database_info()
+
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
@@ -132,9 +143,9 @@ def main():
     # endregion
 
     dp.add_handler(MessageHandler(Filters.reply, answer))  # for answers
-    dp.add_handler(MessageHandler(Filters.chat(int(config.channel_id)), channel_handler,
-                                  channel_post_updates=True))
-    dp.add_handler(CallbackQueryHandler(callback=callback))
+    # dp.add_handler(MessageHandler(Filters.chat(int(config.channel_id)), channel_handler,
+    #                              channel_post_updates=True))
+    # dp.add_handler(CallbackQueryHandler(callback=callback))
     # log all errors
     dp.add_error_handler(error)
 

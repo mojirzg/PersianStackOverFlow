@@ -9,7 +9,7 @@ from main import build_menu
 
 
 def start(bot, update):
-    if db.get_username(update.message.chat_id):
+    if db.get_username(update.message.chat_id) and db.db['info'].find_one(chatid=update.message.chat_id)['status'] == 1:
         reply_keyboard = [['/ask']]
         update.message.reply_text('شما این مراحل را طی کرده اید')  # todo edit information
         update.message.reply_text('ّبرای پرسیدن سوال /ask را ارسال کنید',
@@ -25,6 +25,7 @@ def start(bot, update):
 
 
 def flag_yes(bot, update):
+    db.add_username(update.message.chat_id, True, datetime.datetime.now())
     reply_keyboard = [['Python', 'Photoshop', 'SQL']]
     update.message.reply_text("سوال دیگران برای شما ارسال میشود ",
                               reply_markup=ReplyKeyboardRemove())
@@ -33,7 +34,6 @@ def flag_yes(bot, update):
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
 
-    db.add_username(update.message.chat_id, True, datetime.datetime.now())
     return lan
 
 
@@ -50,7 +50,7 @@ def flag_no(bot, update):
 
 def lan(bot, update):
     reply_keyboard = [['Python', 'Photoshop', 'SQL'], ['/Done', '/Cancel']]
-    if update.message.text in db.change('get', update.message.chat_id, None):
+    if update.message.text in db.change('get', update.message.chat_id, update.message.text):
         bot.send_message(chat_id=update.message.chat_id, text="قبلا انتخاب شده")
         update.message.reply_text("اگر انتخاب شما تمام شده /done را ارسال کنید",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard,
@@ -70,6 +70,9 @@ def lan_done(bot, update):
     update.message.reply_text("آیا درست است؟",
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
+    table = db.db['info']
+    chatid=update.message.chat_id
+    table.update(dict(chatid=chatid , status=1) , ['chatid'])
     return lan_done
 
 
@@ -125,14 +128,21 @@ conv_handler = ConversationHandler(
 
 
 def start_question(bot, update):
-    result = db.change('get', update.message.chat_id, None).split(',')
-    reply_keyboard = [result]
-    db.question_add_id(update.message.chat_id)
-    update.message.reply_text(
-        "سوال در مور چه مبحثی است",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
+    a = db.db['info'].find_one(chatid=update.message.chat_id)
+    if a['status'] == 1:
+        result = db.change('get', update.message.chat_id, None).split(',')
+        reply_keyboard = [result]
+        db.question_add_id(update.message.chat_id)
+        update.message.reply_text(
+            "سوال در مور چه مبحثی است",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
 
-    return language
+        return language
+    else:
+        reply_keyboard = [['/user']]
+        update.message.reply_text('شما ثبت نام نکرده اید لطفا با استفاده از دستور /user ثبت نام کنید',
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
 
 
 def language(bot, update):
@@ -145,6 +155,7 @@ def language(bot, update):
 
 
 def subject(bot, update):
+    print(language)
     db.change_question('subject', update.message.chat_id, update.message.text)
     update.message.reply_text("متن سوال را بفرستید")
     return text
@@ -196,6 +207,11 @@ def send(bot, update):
 
 def cancel2(bot, update):
     user = update.message.from_user
+    reply_keyboard = [['/ask']]
+    update.message.reply_text('ارسال سوال لغو شد')
+    update.message.reply_text('با استفاده از دستور /ask سوال خود را بپرسید',
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                               resize_keyboard=True))
     print("User %s canceled the conversation." % user.first_name)
     return ConversationHandler.END
 
