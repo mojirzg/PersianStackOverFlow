@@ -12,10 +12,10 @@ print("database connection OK...")
 # region username
 
 
-def add_username(chatid, lang, flag, last_ans, like, dislike):
+def add_username(chatid, flag, last_ans):
     table = db['info']
-    table.insert(dict(chatid=chatid, lang=lang, flag=flag, lastans=last_ans, like=like,
-                      dislike=dislike))
+    table.insert(dict(chatid=chatid, lang='', flag=flag, lastans=last_ans, like=0,
+                      report=0, ban=0))
     print("username added successfully")
 
 
@@ -27,7 +27,7 @@ def get_username(chatid):
 def change(op, chatid, arg):
     table = db['info']
     if op == 'flag':
-        table.update(dict(chatid=chatid, flag=True), ['chatid'])
+        table.update(dict(chatid=chatid, flag=arg), ['chatid'])
     elif op == 'lang':
         user = table.find_one(chatid=chatid)
         table.update(dict(chatid=chatid, lang=user['lang'] + arg + ','), ['chatid'])
@@ -46,11 +46,16 @@ def change(op, chatid, arg):
         like = int(result['like']) + 1
         table.update(dict(chatid=chatid, like=like), ['chatid'])
         print(result['like'])
-
+    elif op == 'report':
+        result = table.find_one(chatid=chatid)
+        report = int(result['report']) + 1
+        table.update(dict(chatid=chatid, report=report), ['chatid'])
+        return report
 
 # endregion
 
 # region Questions
+
 
 def question_add_id(chatid):
     table = db['questions']
@@ -78,9 +83,9 @@ def get(chatid):
     return result
 
 
-def question_by_id(ID):  # to Find the chat id of the one who asked the question
+def question_by_id(sender_id):  # to Find the chat id of the one who asked the question
     table = db['questions']
-    result = table.find_one(id=ID)
+    result = table.find_one(id=sender_id)
     return result['chatid']
 
 
@@ -99,6 +104,8 @@ def who_to_ask(lan):
 def likes(op, chatid, msgid):
     table = db['likes']
     table.insert(dict(chatid=chatid, msgid=msgid))
+
+
 def droptable():
     table = db['']
     table.drop()
