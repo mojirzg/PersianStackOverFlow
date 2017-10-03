@@ -5,6 +5,7 @@ import config
 import database as db
 import conversation as cn
 import datetime
+import os
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
