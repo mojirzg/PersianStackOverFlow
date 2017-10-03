@@ -25,21 +25,25 @@ def build_menu(buttons, n_cols, header_buttons=None, footer_buttons=None):
 
 
 def callback(bot, update):
+    print(update.callback_query)
     a_text = update.callback_query.message.text
     x = a_text.index(']')
-    ID = a_text[6:x]
-    print(ID)
+    sender_id = a_text[6:x]
+    print(sender_id)
     if update.callback_query.data == "like":
         print('liked')
-        db.change('addlike', ID, None)
+        db.change('addlike', sender_id, None)
     elif update.callback_query.data == "dislike":
-        print('disliked')
+        print('disliked')  # todo show another answer
     elif update.callback_query.data == "report":
         print('report')
     elif update.callback_query.data == "Qreport":
         print('Qreport')
+        if db.change('report', db.question_by_id(sender_id), None) > 5:
+            db.change('ban', db.get(db.question_by_id(sender_id)), False)
     elif update.callback_query.data == "reply":
-        print('reply')
+        bot.answer_callback_query(update.callback_query.id, text="پاسخ خود را به صورت ریپلی سوال بفرستید...",
+                                  show_alert=True)
 
 
 # endregion
@@ -75,8 +79,8 @@ def answer(bot, update):
     ]
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
     q_text = update.message.reply_to_message.text  # text of the question
-    text = 'ID : [' + str(update.message.chat_id) + ']' + '\n\n' + update.message.text
-    if 'ID' in q_text:
+    text = 'sender_id : [' + str(update.message.chat_id) + ']' + '\n\n' + update.message.text
+    if 'sender_id' in q_text:
         x = q_text.index(']')
         bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=text,
                          reply_markup=reply_markup)

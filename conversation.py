@@ -9,11 +9,19 @@ from main import build_menu
 
 
 def start(bot, update):
-    reply_keyboard = [['خیر', 'بله']]
-    update.message.reply_text(
-        "آیا مایل به پاسخ دادن سوال دیگران هستید؟",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
-    return flag_yes
+    if db.get_username(update.message.chat_id):
+        reply_keyboard = [['/ask']]
+        update.message.reply_text('شما این مراحل را طی کرده اید')  # todo edit information
+        update.message.reply_text('ّبرای پرسیدن سوال /ask را ارسال کنید',
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
+        return ConversationHandler.END
+    else:
+        reply_keyboard = [['خیر', 'بله']]
+        update.message.reply_text(
+            "آیا مایل به پاسخ دادن سوال دیگران هستید؟",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
+        return flag_yes
 
 
 def flag_yes(bot, update):
@@ -25,7 +33,7 @@ def flag_yes(bot, update):
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
 
-    db.add_username(update.message.chat_id, '', True, datetime.datetime.now(), 0, 0, )
+    db.add_username(update.message.chat_id, True, datetime.datetime.now())
     return lan
 
 
@@ -36,7 +44,7 @@ def flag_no(bot, update):
     update.message.reply_text("لطفا موارد مورد نظر خود را انتخاب کنید ",
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
-    db.add_username(update.message.chat_id, '', False, 0, 0, 0, )
+    db.add_username(update.message.chat_id, False, '')
     return lan
 
 
@@ -212,6 +220,5 @@ conv_handler_question = ConversationHandler(
 
 # todo if user conv is not finished delete the row
 # todo reply button for like dislike and report
-# todo add like and dislike for each answer
-# todo bug one can add username twice
-
+# todo table for questions in line
+# todo cancel keyboard buttons and ask buttons
