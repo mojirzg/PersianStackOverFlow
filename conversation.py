@@ -1,10 +1,9 @@
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
-                          ConversationHandler)
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import ConversationHandler
+from telegram import *
+from telegram.ext import *
 import database as db
 import datetime
-
+import config
+from main import build_menu
 
 # region First time
 
@@ -18,7 +17,7 @@ def start(bot, update):
 
 
 def flag_yes(bot, update):
-    reply_keyboard = [['Python', 'Photoshop', 'C#']]
+    reply_keyboard = [['Python', 'Photoshop', 'SQL']]
     update.message.reply_text("سوال دیگران برای شما ارسال میشود ",
                               reply_markup=ReplyKeyboardRemove())
 
@@ -31,7 +30,7 @@ def flag_yes(bot, update):
 
 
 def flag_no(bot, update):
-    reply_keyboard = [['Python', 'Photoshop', 'C#']]
+    reply_keyboard = [['Python', 'Photoshop', 'SQL']]
     update.message.reply_text("سوال دیگران برای شما ارسال نمیشود ",
                               reply_markup=ReplyKeyboardRemove())
     update.message.reply_text("لطفا موارد مورد نظر خود را انتخاب کنید ",
@@ -42,7 +41,7 @@ def flag_no(bot, update):
 
 
 def lan(bot, update):
-    reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/Done', '/Cancel']]
+    reply_keyboard = [['Python', 'Photoshop', 'SQL'], ['/Done', '/Cancel']]
     if update.message.text in db.change('get', update.message.chat_id, None):
         bot.send_message(chat_id=update.message.chat_id, text="قبلا انتخاب شده")
         update.message.reply_text("اگر انتخاب شما تمام شده /done را ارسال کنید",
@@ -51,7 +50,6 @@ def lan(bot, update):
         return lan
     else:
         db.change('lang', update.message.chat_id, update.message.text)
-        print(db.get_username(update.message.chat_id))
         update.message.reply_text("اگر انتخاب شما تمام شده /done را ارسال کنید",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                    one_time_keyboard=True, resize_keyboard=True))
@@ -68,9 +66,9 @@ def lan_done(bot, update):
 
 
 def lan_cancel(bot, update):
-    reply_keyboard = [['Python', 'Photoshop', 'C#'], ['/Done', '/Cancel']]
+    reply_keyboard = [['Python', 'Photoshop', 'SQL'], ['/Done', '/Cancel']]
     db.change('del', update.message.chat_id, None)
-    update.message.reply_text('موارد قبلی پاک شد لطفا دوباره انتخاب کنید',
+    update.message.reply_text("آیا درست است؟",
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True, resize_keyboard=True))
 
@@ -81,8 +79,8 @@ def check(bot, update):
     reply_keyboard = [['/ask']]
     if update.message.text == 'بله':
         update.message.reply_text('اطلاعات شما ثبت شد میتوانید سوال خود را بپرسید',
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
-                                                                   resize_keybord=True))
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                                   resize_keyboard=True))
         db.get_username(update.message.chat_id)
         return ConversationHandler.END
 
@@ -100,7 +98,7 @@ conv_handler = ConversationHandler(
         flag_yes: [RegexHandler('^(بله)$', flag_yes),
                    RegexHandler('^(خیر)$', flag_no)],
 
-        lan: [RegexHandler('^(Python|Photoshop|C#)$', lan),
+        lan: [RegexHandler('^(Python|Photoshop|SQL)$', lan),
               CommandHandler('Done', lan_done),
               CommandHandler('Cancel', lan_cancel)],
 
@@ -160,20 +158,31 @@ def text(bot, update):
 def send(bot, update):
     result = db.get(update.message.chat_id)
     send_message = result['asked'][1:len(result['asked']) - 1].split(',')
+    button_list = [
+        InlineKeyboardButton("⛔️   " + 'ریپورت', callback_data="Qreport"),
+        InlineKeyboardButton("↪️   " + 'پاسخ دادن', callback_data="reply"),
+    ]
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
     for ID in send_message:
-        if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
-                        str(update.message.chat_id) != ID:
+        if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(seconds=2):
+                # and \
+                #        str(update.message.chat_id) != ID:
             # don't send if last send was before 2 minutes
-            print(ID, "not passed")
-            s = bot.send_message(chat_id=ID, text='ID : [' + str(result['id']) + ']'
-                                                                                 '\nمبحث : ' + result['lan'] +
-                                                  '\nموضوع : ' + result['subject'] +
-                                                  '\nمتن : ' + result['qtext'])
-            print(s.message_id)
+            bot.send_message(chat_id=ID, text='ID : [' + str(result['id']) + ']'
+                                              '\nمبحث : ' + result['lan'] +
+                                              '\nموضوع : ' + result['subject'] +
+                                              '\nمتن : ' + result['qtext'],
+                             reply_markup=reply_markup)
+
             db.change('time', ID, datetime.datetime.now())
-        else:
-            print("no one to send")
+        elif datetime.datetime.now() - db.change('gettime', ID, None) < datetime.timedelta(minutes=2):
+            print(ID, "2min not passed")
     update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
+    s = bot.send_message(chat_id=config.channel_id, text='ID : [' + str(result['id']) + ']'
+                                                         '\nمبحث : ' + result['lan'] +
+                                                         '\nموضوع : ' + result['subject'] +
+                                                         '\nمتن : ' + result['qtext'])
+    db.change_question('msgid', update.message.chat_id, s.message_id)
     return ConversationHandler.END
 
 
@@ -187,7 +196,7 @@ conv_handler_question = ConversationHandler(
     entry_points=[CommandHandler('ask', start_question)],
 
     states={
-        language: [RegexHandler('^(Python|Photoshop|C#)$', language)],
+        language: [RegexHandler('^(Python|Photoshop|SQL)$', language)],
 
         subject: [MessageHandler(Filters.text, subject)],
 
@@ -204,3 +213,5 @@ conv_handler_question = ConversationHandler(
 # todo if user conv is not finished delete the row
 # todo reply button for like dislike and report
 # todo add like and dislike for each answer
+# todo bug one can add username twice
+
