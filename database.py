@@ -41,6 +41,11 @@ def change(op, chatid, arg):
     elif op == 'gettime':  # returns the last send question time
         result = table.find_one(chatid=chatid)
         return result['lastans']
+    elif op == 'addlike':
+        result = table.find_one(chatid=chatid)
+        like = int(result['like']) + 1
+        table.update(dict(chatid=chatid, like=like), ['chatid'])
+        print(result['like'])
 
 
 # endregion
@@ -50,7 +55,7 @@ def change(op, chatid, arg):
 def question_add_id(chatid):
     table = db['questions']
     table.insert(dict(chatid=chatid, lan='', subject='', qtext='', photo='', ans1='', ans2='',
-                      ans3='', asked=''))
+                      ans3='', asked='', channel_msgid=''))
 
 
 def change_question(op, chatid, arg):
@@ -63,6 +68,8 @@ def change_question(op, chatid, arg):
         table.update(dict(chatid=chatid, qtext=arg), ['chatid'])
     elif op == 'lan':
         table.update(dict(chatid=chatid, lan=arg), ['chatid'])
+    elif op == 'msgid':
+        table.update(dict(chatid=chatid, channel_msgid=arg), ['chatid'])
 
 
 def get(chatid):
@@ -89,7 +96,9 @@ def who_to_ask(lan):
 
 # endregion
 
-
+def likes(op, chatid, msgid):
+    table = db['likes']
+    table.insert(dict(chatid=chatid, msgid=msgid))
 def droptable():
     table = db['']
     table.drop()

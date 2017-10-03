@@ -1,6 +1,5 @@
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
-                          ConversationHandler)
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import *
+from telegram import *
 import logging
 import config
 import database as db
@@ -13,13 +12,44 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+# region menu
+
+
+def build_menu(buttons, n_cols, header_buttons=None, footer_buttons=None):
+    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
+    if header_buttons:
+        menu.insert(0, header_buttons)
+    if footer_buttons:
+        menu.append(footer_buttons)
+    return menu
+
+
+def callback(bot, update):
+    a_text = update.callback_query.message.text
+    x = a_text.index(']')
+    ID = a_text[6:x]
+    print(ID)
+    if update.callback_query.data == "like":
+        print('liked')
+        db.change('addlike', ID, None)
+    elif update.callback_query.data == "dislike":
+        print('disliked')
+    elif update.callback_query.data == "report":
+        print('report')
+    elif update.callback_query.data == "Qreport":
+        print('Qreport')
+    elif update.callback_query.data == "reply":
+        print('reply')
+
+
+# endregion
+
 
 def start(bot, update):
     update.message.reply_text('متن خوش آمد گویی')
     chatid = update.message.chat_id
     if db.get_username(chatid):
         reply_keyboard = [['/ask']]
-        print(db.get_username(chatid))
         update.message.reply_text('ّبرای پرسیدن سوال /ask را ارسال کنید',
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
                                                                    resize_keyboard=True))
@@ -38,10 +68,23 @@ def help(bot, update):
 
 
 def answer(bot, update):
+    button_list = [
+        InlineKeyboardButton("👎🏻   " + 'کمکی نکرد', callback_data="dislike"),
+        InlineKeyboardButton("👍🏻   " + 'کمک کرد', callback_data="like"),
+        InlineKeyboardButton("⛔️   " + 'ریپورت', callback_data="report"),
+    ]
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
     q_text = update.message.reply_to_message.text  # text of the question
+    text = 'ID : [' + str(update.message.chat_id) + ']' + '\n\n' + update.message.text
     if 'ID' in q_text:
         x = q_text.index(']')
-        bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=update.message.text)
+        bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=text,
+                         reply_markup=reply_markup)
+
+        bot.send_message(chat_id=config.channel_id,
+                         reply_to_message_id=db.get(db.question_by_id(q_text[6:x]))['channel_msgid'],
+                         text=update.message.text)
+
         # send the answer
 
 
@@ -53,6 +96,10 @@ def data(bot, update):
     print(x - y)
     if x - y > datetime.timedelta(minutes=1):
         print("ok, 60 seconds have passed")
+
+
+def channel_handler(bot, update):
+    print(update.channel_post.text)
 
 
 def text(bot, update):
@@ -81,6 +128,9 @@ def main():
     # endregion
 
     dp.add_handler(MessageHandler(Filters.reply, answer))  # for answers
+    dp.add_handler(MessageHandler(Filters.chat(int(config.channel_id)), channel_handler,
+                                  channel_post_updates=True))
+    dp.add_handler(CallbackQueryHandler(callback=callback))
     # log all errors
     dp.add_error_handler(error)
 
