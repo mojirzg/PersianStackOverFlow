@@ -61,9 +61,10 @@ def callback(bot, update):
             bot.send_message(chat_id=db.question_by_id(question_id), text=result['atext'], reply_markup=reply_markup)
             db.change_answers('flag_send', db.find_answer_id(question_id, result['atext']), None)
             result = db.db['questions'].find_one(id=question_id)
+            user = update.message.from_user
             bot.send_message(chat_id=config.channel_id,
                              reply_to_message_id=result['channel_msgid'],
-                             text=a_text)
+                             text=user.first_name + user.last_name + '\n\n' + a_text)
 
     elif update.callback_query.data == "report":
         if db.report('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
@@ -133,10 +134,10 @@ def answer(bot, update):
             db.change_answers('flag_send', db.find_answer_id(q_text[6:x], text), None)
             bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=text,
                              reply_markup=reply_markup)
-
+            user = update.message.from_user
             bot.send_message(chat_id=config.channel_id,
                              reply_to_message_id=db.question_get(db.question_by_id(q_text[6:x]))['channel_msgid'],
-                             text=update.message.text)
+                             text=user.first_name + user.last_name + '\n\n' + update.message.text)
 
         # send the answer
 
