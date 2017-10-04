@@ -192,9 +192,8 @@ def send(bot, update):
     ]
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
     for ID in send_message:
-        if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(seconds=2):
-                # and \
-                #        str(update.message.chat_id) != ID:
+        if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
+                                    str(update.message.chat_id) != ID:
             # don't send if last send was before 2 minutes
             bot.send_message(chat_id=ID, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']'
                                               '\nمبحث : ' + result['lan'] +
@@ -242,5 +241,3 @@ conv_handler_question = ConversationHandler(
 
     fallbacks=[CommandHandler('cancel', cancel2)])
 # endregion
-
-
