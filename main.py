@@ -34,11 +34,14 @@ def callback(bot, update):
         if db.likes('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
             db.change('addlike', sender_id, None)
             db.likes('add', update.callback_query.from_user.id, update.callback_query.message.message_id)
+            bot.send_message(chat_id=sender_id, text='👍🏻 با تشکر')
+
         else:
             db.change('removelike', sender_id, None)
             db.likes('remove', update.callback_query.from_user.id, None)
-            bot.answer_callback_query(update.callback_query.id, text="عمل شما Undo شد",
+            bot.answer_callback_query(update.callback_query.id, text="عمل شما Undo شد 😐",
                                       show_alert=True)
+            bot.send_message(chat_id=sender_id, text='لایک پس گرفته شد')
     elif update.callback_query.data == "dislike":
         button_list = [
             InlineKeyboardButton("👎🏻   " + 'کمکی نکرد', callback_data="dislike"),
@@ -57,6 +60,10 @@ def callback(bot, update):
             result = db.db['answers'].find_one(questionid=question_id, flagsend=False)
             bot.send_message(chat_id=db.question_by_id(question_id), text=result['atext'], reply_markup=reply_markup)
             db.change_answers('flag_send', db.find_answer_id(question_id, result['atext']), None)
+            result = db.db['questions'].find_one(id=question_id)
+            bot.send_message(chat_id=config.channel_id,
+                             reply_to_message_id=result['channel_msgid'],
+                             text=a_text)
 
     elif update.callback_query.data == "report":
         if db.report('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
@@ -112,7 +119,6 @@ def answer(bot, update):
     q_text = update.message.reply_to_message.text  # text of the question
     text = 'ID : [' + str(update.message.chat_id) + ']' + '\n\n' + update.message.text
     if db.change('getreport', update.message.chat_id, None) > 5:
-        print('report', db.change('getreport', update.message.chat_id, None))
         update.message.reply_text('شما مجاز به ارسال جواب نیستید'
                                   'اگر اشتباهی ریپورد شده اید با "" ارتباط برقرار کنید ')
 
@@ -133,16 +139,6 @@ def answer(bot, update):
                              text=update.message.text)
 
         # send the answer
-
-
-def data(bot, update):
-    y = datetime.datetime.now()
-    print(y)
-    x = datetime.datetime.now()
-    print(x)
-    print(x - y)
-    if x - y > datetime.timedelta(minutes=1):
-        print("ok, 60 seconds have passed")
 
 
 def channel_handler(bot, update):
@@ -168,7 +164,6 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("d", data))  # for test purposes
 
     # region conversation handler
     dp.add_handler(cn.conv_handler_question)

@@ -4,9 +4,9 @@ import psycopg2
 
 # region Connection
 db = dataset.connect('postgresql://{}:{}@{}/{}'.format(config.dbusername,
-                                                        config.dbpassword,
-                                                        config.host,
-                                                        config.database))
+                                                       config.dbpassword,
+                                                       config.host,
+                                                       config.database))
 print("database connection OK...")
 
 
