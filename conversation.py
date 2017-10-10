@@ -190,12 +190,16 @@ def history(bot, update):
     q_id = db.q_id(update.message.chat_id)
     chat_id = update.message.chat_id
     history_question_id = search(db.db['questions'].find_one(id=q_id)['qtext'])
+    print('con 193', db.db['questions'].find_one(id=q_id)['qtext'])
+    print('con 194', search(db.db['questions'].find_one(id=q_id)['qtext']))
     update.message.reply_text('سوال های مشابه یافت شده'
                               'برای دیدن پاسخ مورد نظر ans را بر روی خود سوال ریپلی کنید'
                               , reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                  resize_keyboard=True))
     for item in history_question_id:
+        print('200', item)
         result = db.db['questions'].find_one(id=item)
+        print(result)
         bot.send_message(chat_id=chat_id, text=result['qtext'])
 
     return send
