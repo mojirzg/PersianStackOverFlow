@@ -33,6 +33,8 @@ def callback(bot, update):
     if update.callback_query.data == "like":
         if db.likes('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
             db.change('addlike', sender_id, None)
+            bot.answer_callback_query(update.callback_query.id, text="لایک شما ثبت شد",
+                                      show_alert=True)
             db.likes('add', update.callback_query.from_user.id, update.callback_query.message.message_id)
             bot.send_message(chat_id=sender_id, text='👍🏻 با تشکر')
 
@@ -52,7 +54,6 @@ def callback(bot, update):
         question_id = db.find_send_answer(sender_id, update.callback_query.message.text)[1]
         db.db['answers'].delete(id=db.find_send_answer(sender_id, update.callback_query.message.text)[0])
         if db.db['answers'].find_one(questionid=question_id) is None:
-            print(db.db['answers'].find_one(questionid=question_id))
             db.change_question('change_flag', question_id, False)
             bot.answer_callback_query(update.callback_query.id, text='جواب دیگری برای نمایس نیست..',
                                       show_alert=True)
@@ -69,6 +70,8 @@ def callback(bot, update):
     elif update.callback_query.data == "report":
         if db.report('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
             db.change('report', sender_id, None)
+            bot.answer_callback_query(update.callback_query.id, text="ریپورت شما ثبت شد",
+                                      show_alert=True)
             db.report('add', update.callback_query.from_user.id, update.callback_query.message.message_id)
         else:
             db.change('removereport', sender_id, None)
@@ -78,6 +81,8 @@ def callback(bot, update):
     elif update.callback_query.data == "Qreport":
         if db.q_report('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
             db.change('ban', db.question_by_id(sender_id), None)
+            bot.answer_callback_query(update.callback_query.id, text="ریپورت شما ثبت شد",
+                                      show_alert=True)
             db.q_report('add', update.callback_query.from_user.id, update.callback_query.message.message_id)
         else:
             db.change('removeban', db.question_by_id(sender_id), None)
