@@ -195,7 +195,7 @@ def history(bot, update):
                               , reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                  resize_keyboard=True))
     for item in history_question_id:
-        result = db.db['questions'].find_one(id=q_id)
+        result = db.db['questions'].find_one(id=item)
         bot.send_message(chat_id=chat_id, text=result['qtext'])
 
     return send
