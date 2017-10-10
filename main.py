@@ -4,7 +4,7 @@ import logging
 import config
 import database as db
 import conversation as cn
-import datetime
+import search
 import os
 
 # Enable logging

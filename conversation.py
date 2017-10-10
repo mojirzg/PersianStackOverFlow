@@ -1,5 +1,6 @@
 from telegram import *
 from telegram.ext import *
+from search import search
 import database as db
 import datetime
 import config
@@ -179,7 +180,24 @@ def text(bot, update):
                               '\nمتن : ' + result['qtext'] +
                               '\nبرای ارسال ok و برای ویرایش cancel را ارسال کنید',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
-                                                               one_time_keyboard=True, resize_keyboard=True))
+                                                               one_time_keyboard=True,
+                                                               resize_keyboard=True))
+    return history
+
+
+def history(bot, update):
+    reply_keyboard = [['cancel'], ['سوال مورد نظرم یافت نشد']]
+    q_id = db.q_id(update.message.chat_id)
+    chat_id = update.message.chat_id
+    history_question_id = search(db.db['questions'].find_one(id=q_id)['qtext'])
+    update.message.reply_text('سوال های مشابه یافت شده'
+                              'برای دیدن پاسخ مورد نظر ans را بر روی خود سوال ریپلی کنید'
+                              , reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                                 resize_keyboard=True))
+    for item in history_question_id:
+        result = db.db['questions'].find_one(id=q_id)
+        bot.send_message(chat_id=chat_id, text=result['qtext'])
+
     return send
 
 
@@ -189,7 +207,7 @@ def send(bot, update):
     button_list = [
         InlineKeyboardButton("⛔️   " + 'ریپورت', callback_data="Qreport"),
         InlineKeyboardButton("↪️   " + 'پاسخ دادن', callback_data="reply"),
-    ]
+    ]  # todo only send for top likes
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
     for ID in send_message:
         if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
@@ -234,7 +252,10 @@ conv_handler_question = ConversationHandler(
 
         text: [MessageHandler(Filters.text, text)],
 
-        send: [RegexHandler('^(ok)$', send),
+        history: [RegexHandler('^(ok)$', history),
+                  RegexHandler('^(cancel)$', cancel2)],
+
+        send: [RegexHandler('^(سوال مورد نظرم یافت نشد)$', send),
                RegexHandler('^(cancel)$', cancel2)]
 
     },

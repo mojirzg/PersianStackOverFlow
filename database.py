@@ -179,7 +179,6 @@ def find_send_answer(sender_id, text):
 
 # endregion
 
-
 # region callback
 def likes(op, chatid, msgid):
     table = db['likes']
