@@ -99,26 +99,20 @@ def question_add_id(chatid):
                       asked='', channel_msgid=''))
 
 
-def change_question(op, chatid, arg):
+def change_question(op, q_id, arg):
     table = db['questions']
     if op == 'subject':
-        table.update(dict(chatid=chatid, subject=arg), ['chatid'])
+        table.update(dict(id=q_id, subject=arg), ['id'])
     elif op == 'asked':
-        table.update(dict(chatid=chatid, asked=arg), ['chatid'])
+        table.update(dict(id=q_id, asked=arg), ['id'])
     elif op == 'text':
-        table.update(dict(chatid=chatid, qtext=arg), ['chatid'])
+        table.update(dict(id=q_id, qtext=arg), ['id'])
     elif op == 'lan':
-        table.update(dict(chatid=chatid, lan=arg), ['chatid'])
+        table.update(dict(id=q_id, lan=arg), ['id'])
     elif op == 'msgid':
-        table.update(dict(id=chatid, channel_msgid=arg), ['id'])
+        table.update(dict(id=q_id, channel_msgid=arg), ['id'])
     elif op == 'change_flag':
-        table.update(dict(id=chatid, flag_answered=arg), ['id'])
-
-
-def question_get(chatid):
-    table = db['questions']
-    result = table.find_one(chatid=chatid)
-    return result
+        table.update(dict(id=q_id, flag_answered=arg), ['id'])
 
 
 def q_id(chatid):
@@ -128,6 +122,16 @@ def q_id(chatid):
     for row in result:
         temp.append(row['id'])
     return max(temp)
+
+
+def question_get(chatid):
+    table = db['questions']
+    result = table.find(chatid=chatid)
+    temp = []
+    for row in result:
+        temp.append(row['id'])
+    result = table.find_one(id=max(temp))
+    return result
 
 
 def question_by_id(sender_id):  # to Find the chat id of the one who asked the question
@@ -174,8 +178,11 @@ def change_answers(op, answer_id, arg):
 
 def find_send_answer(sender_id, text):
     table = db['answers']
-    result = table.find_one(chatid=sender_id, atext=text, flagsend=True)
-    return result['id'], result['questionid']
+    if table.find_one(chatid=sender_id, atext=text, flagsend=True):
+        result = table.find_one(chatid=sender_id, atext=text, flagsend=True)
+        return result['id'], result['questionid']
+    else:
+        return None
 
 # endregion
 

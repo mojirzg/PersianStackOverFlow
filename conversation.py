@@ -157,8 +157,9 @@ def start_question(bot, update):
 
 
 def language(bot, update):
-    db.change_question('lan', update.message.chat_id, update.message.text)
-    db.change_question('asked', update.message.chat_id, db.who_to_ask(update.message.text))
+    q_id = db.q_id(update.message.chat_id)
+    db.change_question('lan', q_id, update.message.text)
+    db.change_question('asked', q_id, db.who_to_ask(update.message.text))
     update.message.reply_text("موضوع سوال شما چیست؟ ",
                               reply_markup=ReplyKeyboardRemove())
 
@@ -166,13 +167,15 @@ def language(bot, update):
 
 
 def subject(bot, update):
-    db.change_question('subject', update.message.chat_id, update.message.text)
+    q_id = db.q_id(update.message.chat_id)
+    db.change_question('subject', q_id, update.message.text)
     update.message.reply_text("متن سوال را بفرستید")
     return text
 
 
 def text(bot, update):
-    db.change_question('text', update.message.chat_id, update.message.text)
+    q_id = db.q_id(update.message.chat_id)
+    db.change_question('text', q_id, update.message.text)
     result = db.question_get(update.message.chat_id)
     reply_keyboard = [['cancel', 'ok']]
     update.message.reply_text('مبحث : ' + result['lan'] +
@@ -186,23 +189,52 @@ def text(bot, update):
 
 
 def history(bot, update):
-    reply_keyboard = [['cancel'], ['سوال مورد نظرم یافت نشد']]
-    q_id = db.q_id(update.message.chat_id)
+    reply_keyboard = [['بله', 'خیر'], ['cancel']]
     chat_id = update.message.chat_id
-    history_question_id = search(db.db['questions'].find_one(id=q_id)['qtext'])
-    print('con 193', db.db['questions'].find_one(id=q_id)['qtext'])
-    print('con 194', search(db.db['questions'].find_one(id=q_id)['qtext']))
-    update.message.reply_text('سوال های مشابه یافت شده'
-                              'برای دیدن پاسخ مورد نظر ans را بر روی خود سوال ریپلی کنید'
-                              , reply_markup=ReplyKeyboardMarkup(reply_keyboard,
-                                                                 resize_keyboard=True))
-    for item in history_question_id:
-        print('200', item)
-        result = db.db['questions'].find_one(id=item)
-        print(result)
-        bot.send_message(chat_id=chat_id, text=result['qtext'])
+    q_id = db.q_id(chat_id)
+    history_question_id = search(db.db['questions'].find_one(id=q_id)['qtext'], q_id)
 
-    return send
+    if history_question_id is None:
+        print('history is none')
+        result = db.question_get(update.message.chat_id)
+        send_message = result['asked'][1:len(result['asked']) - 1].split(',')
+        button_list = [
+            InlineKeyboardButton("⛔️   " + 'ریپورت', callback_data="Qreport"),
+            InlineKeyboardButton("↪️   " + 'پاسخ دادن', callback_data="reply"),
+        ]  # todo only send for top likes
+        reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
+        # for ID in send_message:
+        #     if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
+        #                     str(update.message.chat_id) != ID:
+        #         # don't send if last send was before 2 minutes
+        #         bot.send_message(chat_id=ID, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']'
+        #                                                                                             '\nمبحث : ' +
+        #                                           result['lan'] +
+        #                                           '\nموضوع : ' + result['subject'] +
+        #                                           '\nمتن : ' + result['qtext'],
+        #                          reply_markup=reply_markup)
+        #
+        #         db.change('time', ID, datetime.datetime.now())
+        #     elif datetime.datetime.now() - db.change('gettime', ID, None) < datetime.timedelta(minutes=2):
+        #         print(ID, "2min not passed")
+        # update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
+        # s = bot.send_message(chat_id=config.channel_id, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']' +
+        #                                                      '\nمبحث : ' + result['lan'] +
+        #                                                      '\nموضوع : ' + result['subject'] +
+        #                                                      '\nمتن : ' + result['qtext'])
+        # db.change_question('msgid', db.q_id(update.message.chat_id), s.message_id)
+        return ConversationHandler.END
+    else:
+        update.message.reply_text('سوال های مشابه یافت شده\n'
+                                  'برای دیدن پاسخ مورد نظر ans را بر روی خود سوال ریپلی کنید'
+                                  , reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                                     resize_keyboard=True))
+        for item in history_question_id:
+            result = db.db['questions'].find_one(id=item)
+            bot.send_message(chat_id=chat_id, text='ID : [' + str(item) + ']'
+                                              '\nمبحث : ' + result['lan'] +
+                                              '\nموضوع : ' + result['subject'] +
+                                              '\nمتن : ' + result['qtext'])
 
 
 def send(bot, update):
@@ -238,6 +270,8 @@ def send(bot, update):
 def cancel2(bot, update):
     user = update.message.from_user
     reply_keyboard = [['/ask']]
+    result = db.question_get(update.message.chat_id)
+    db.db['questions'].delete(id=result['id'])
     update.message.reply_text('ارسال سوال لغو شد')
     update.message.reply_text('با استفاده از دستور /ask سوال خود را بپرسید',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,

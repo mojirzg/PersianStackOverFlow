@@ -51,13 +51,9 @@ def callback(bot, update):
             InlineKeyboardButton("⛔️   " + 'ریپورت', callback_data="report"),
         ]
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
-        question_id = db.find_send_answer(sender_id, update.callback_query.message.text)[1]
-        db.db['answers'].delete(id=db.find_send_answer(sender_id, update.callback_query.message.text)[0])
-        if db.db['answers'].find_one(questionid=question_id) is None:
-            db.change_question('change_flag', question_id, False)
-            bot.answer_callback_query(update.callback_query.id, text='جواب دیگری برای نمایس نیست..',
-                                      show_alert=True)
-        else:
+        if db.find_send_answer(sender_id, update.callback_query.message.text):
+            question_id = db.find_send_answer(sender_id, update.callback_query.message.text)[1]
+            db.db['answers'].delete(id=db.find_send_answer(sender_id, update.callback_query.message.text)[0])
             result = db.db['answers'].find_one(questionid=question_id, flagsend=False)
             bot.send_message(chat_id=db.question_by_id(question_id), text=result['atext'], reply_markup=reply_markup)
             db.change_answers('flag_send', db.find_answer_id(question_id, result['atext']), None)
@@ -66,7 +62,9 @@ def callback(bot, update):
             bot.send_message(chat_id=config.channel_id,
                              reply_to_message_id=result['channel_msgid'],
                              text=user.first_name + user.last_name + '\n\n' + a_text)
-
+        else:
+            bot.answer_callback_query(update.callback_query.id, text='جواب دیگری برای نمایس نیست..',
+                                      show_alert=True)
     elif update.callback_query.data == "report":
         if db.report('get', update.callback_query.from_user.id, update.callback_query.message.message_id) is None:
             db.change('report', sender_id, None)
@@ -123,28 +121,38 @@ def answer(bot, update):
     ]
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
     q_text = update.message.reply_to_message.text  # text of the question
-    text = 'ID : [' + str(update.message.chat_id) + ']' + '\n\n' + update.message.text
-    if db.change('getreport', update.message.chat_id, None) > 5:
-        update.message.reply_text('شما مجاز به ارسال جواب نیستید'
-                                  'اگر اشتباهی ریپورد شده اید با "" ارتباط برقرار کنید ')
+    if update.message.text == 'ans':
+        if 'ID' in q_text:
+            q_id = q_text[6:q_text.index(']')]
+            result = db.db['answers'].find(questionid=q_id, flagsend=True)
+            for row in result:
+                print(row)
+                text = row['atext']
+                bot.send_message(chat_id=update.message.chat_id, text=text,
+                                 reply_markup=reply_markup)
+    else:
+        text = 'ID : [' + str(update.message.chat_id) + ']' + '\n\n' + update.message.text
+        if db.change('getreport', update.message.chat_id, None) > 5:
+            update.message.reply_text('شما مجاز به ارسال جواب نیستید'
+                                      'اگر اشتباهی ریپورد شده اید با "" ارتباط برقرار کنید ')
 
-    elif 'ID' in q_text:
-        x = q_text.index(']')
-        if db.db['questions'].find_one(id=q_text[6:x])is None or \
-           db.db['questions'].find_one(id=q_text[6:x])['flag_answered']:
-            db.answers_add_id(update.message.chat_id, q_text[6:x], text)
-        else:
-            db.answers_add_id(update.message.chat_id, q_text[6:x], text)
-            db.change_question('change_flag', q_text[6:x], True)
-            db.change_answers('flag_send', db.find_answer_id(q_text[6:x], text), None)
-            bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=text,
-                             reply_markup=reply_markup)
-            user = update.message.from_user
-            bot.send_message(chat_id=config.channel_id,
-                             reply_to_message_id=db.question_get(db.question_by_id(q_text[6:x]))['channel_msgid'],
-                             text=user.first_name + user.last_name + '\n\n' + update.message.text)
+        elif 'ID' in q_text:
+            x = q_text.index(']')
+            if db.db['questions'].find_one(id=q_text[6:x])is None or \
+               db.db['questions'].find_one(id=q_text[6:x])['flag_answered']:
+                db.answers_add_id(update.message.chat_id, q_text[6:x], text)
+            else:
+                db.answers_add_id(update.message.chat_id, q_text[6:x], text)
+                db.change_question('change_flag', q_text[6:x], True)
+                db.change_answers('flag_send', db.find_answer_id(q_text[6:x], text), None)
+                bot.send_message(chat_id=db.question_by_id(q_text[6:x]), text=text,
+                                 reply_markup=reply_markup)
+                user = update.message.from_user
+                bot.send_message(chat_id=config.channel_id,
+                                 reply_to_message_id=db.question_get(db.question_by_id(q_text[6:x]))['channel_msgid'],
+                                 text=user.first_name + user.last_name + '\n\n' + update.message.text)
 
-        # send the answer
+            # send the answer
 
 
 def channel_handler(bot, update):
