@@ -307,8 +307,8 @@ conv_handler_question = ConversationHandler(
         history: [RegexHandler('^(ok)$', history),
                   RegexHandler('^(cancel)$', cancel2)],
 
-        send: [RegexHandler('^(بله)$', send),
-               RegexHandler('^(خیر)$', send_y),
+        send: [RegexHandler('^(بله)$', send_y),
+               RegexHandler('^(خیر)$', send),
                RegexHandler('^(cancel)$', cancel2)]
 
         },
