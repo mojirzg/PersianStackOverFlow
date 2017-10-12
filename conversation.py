@@ -233,9 +233,9 @@ def history(bot, update):
         for item in history_question_id:
             result = db.db['questions'].find_one(id=item)
             bot.send_message(chat_id=chat_id, text='ID : [' + str(item) + ']'
-                                              '\nمبحث : ' + result['lan'] +
-                                              '\nموضوع : ' + result['subject'] +
-                                              '\nمتن : ' + result['qtext'])
+                                                   '\nمبحث : ' + result['lan'] +
+                                                   '\nموضوع : ' + result['subject'] +
+                                                   '\nمتن : ' + result['qtext'])
 
 
 def send(bot, update):
@@ -259,7 +259,9 @@ def send(bot, update):
             db.change('time', ID, datetime.datetime.now())
         elif datetime.datetime.now() - db.change('gettime', ID, None) < datetime.timedelta(minutes=2):
             print(ID, "2min not passed")
-    update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
+    reply_keyboard = [['/ask']]
+    update.message.reply_text('ارسال شد', reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                             resize_keyboard=True))
     s = bot.send_message(chat_id=config.channel_id, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']' +
                                                          '\nمبحث : ' + result['lan'] +
                                                          '\nموضوع : ' + result['subject'] +
@@ -270,7 +272,8 @@ def send(bot, update):
 
 def send_y(bot, update):
     reply_keyboard = [['/ask']]
-    update.message.reply_text(reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+    update.message.reply_text('ّبرای دیدن جواب سوال ans را بر روی آن ریپلی کنید',
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
                                                                resize_keyboard=True))
     result = db.question_get(update.message.chat_id)
     db.db['questions'].delete(id=result['id'])

@@ -36,14 +36,20 @@ def callback(bot, update):
             bot.answer_callback_query(update.callback_query.id, text="لایک شما ثبت شد",
                                       show_alert=True)
             db.likes('add', update.callback_query.from_user.id, update.callback_query.message.message_id)
-            bot.send_message(chat_id=sender_id, text='👍🏻 با تشکر')
+            reply_keyboard = [['/ask']]
+            bot.send_message(chat_id=sender_id, text='👍🏻 با تشکر', reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                                                                         resize_keyboard=True
+                                                                                                       ))
 
         else:
             db.change('removelike', sender_id, None)
             db.likes('remove', update.callback_query.from_user.id, None)
             bot.answer_callback_query(update.callback_query.id, text="عمل شما Undo شد 😐",
                                       show_alert=True)
-            bot.send_message(chat_id=sender_id, text='لایک پس گرفته شد')
+            reply_keyboard = [['/ask']]
+            bot.send_message(chat_id=sender_id, text='لایک پس گرفته شد', reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                                                                         resize_keyboard=True
+                                                                                                       ))
     elif update.callback_query.data == "dislike":
         button_list = [
             InlineKeyboardButton("👎🏻   " + 'کمکی نکرد', callback_data="dislike"),
@@ -142,6 +148,7 @@ def answer(bot, update):
                db.db['questions'].find_one(id=q_text[6:x])['flag_answered']:
                 db.answers_add_id(update.message.chat_id, q_text[6:x], text)
             else:
+                reply_keyboard = [['/ask']]
                 db.answers_add_id(update.message.chat_id, q_text[6:x], text)
                 db.change_question('change_flag', q_text[6:x], True)
                 db.change_answers('flag_send', db.find_answer_id(q_text[6:x], text), None)
