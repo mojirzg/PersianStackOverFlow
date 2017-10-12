@@ -2,3 +2,4 @@ psycopg2   # also install from https://www.postgresql.org/download/
 dataset
 telegram
 python-telegram-bot
+fuzzywuzzy

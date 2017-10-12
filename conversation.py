@@ -168,6 +168,7 @@ def language(bot, update):
 
 def subject(bot, update):
     q_id = db.q_id(update.message.chat_id)
+    print('con 171', q_id)
     db.change_question('subject', q_id, update.message.text)
     update.message.reply_text("متن سوال را بفرستید")
     return text
@@ -189,7 +190,7 @@ def text(bot, update):
 
 
 def history(bot, update):
-    reply_keyboard = [['بله', 'خیر'], ['cancel']]
+    reply_keyboard = [['خیر', 'بله'], ['cancel']]
     chat_id = update.message.chat_id
     q_id = db.q_id(chat_id)
     history_question_id = search(db.db['questions'].find_one(id=q_id)['qtext'], q_id)
@@ -203,26 +204,26 @@ def history(bot, update):
             InlineKeyboardButton("↪️   " + 'پاسخ دادن', callback_data="reply"),
         ]  # todo only send for top likes
         reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
-        # for ID in send_message:
-        #     if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
-        #                     str(update.message.chat_id) != ID:
-        #         # don't send if last send was before 2 minutes
-        #         bot.send_message(chat_id=ID, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']'
-        #                                                                                             '\nمبحث : ' +
-        #                                           result['lan'] +
-        #                                           '\nموضوع : ' + result['subject'] +
-        #                                           '\nمتن : ' + result['qtext'],
-        #                          reply_markup=reply_markup)
-        #
-        #         db.change('time', ID, datetime.datetime.now())
-        #     elif datetime.datetime.now() - db.change('gettime', ID, None) < datetime.timedelta(minutes=2):
-        #         print(ID, "2min not passed")
-        # update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
-        # s = bot.send_message(chat_id=config.channel_id, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']' +
-        #                                                      '\nمبحث : ' + result['lan'] +
-        #                                                      '\nموضوع : ' + result['subject'] +
-        #                                                      '\nمتن : ' + result['qtext'])
-        # db.change_question('msgid', db.q_id(update.message.chat_id), s.message_id)
+        for ID in send_message:
+            if datetime.datetime.now() - db.change('gettime', ID, None) > datetime.timedelta(minutes=2) and \
+                            str(update.message.chat_id) != ID:
+                # don't send if last send was before 2 minutes
+                bot.send_message(chat_id=ID, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']'
+                                                                                                    '\nمبحث : ' +
+                                                  result['lan'] +
+                                                  '\nموضوع : ' + result['subject'] +
+                                                  '\nمتن : ' + result['qtext'],
+                                 reply_markup=reply_markup)
+
+                db.change('time', ID, datetime.datetime.now())
+            elif datetime.datetime.now() - db.change('gettime', ID, None) < datetime.timedelta(minutes=2):
+                print(ID, "2min not passed")
+        update.message.reply_text('ارسال شد', reply_markup=ReplyKeyboardRemove())
+        s = bot.send_message(chat_id=config.channel_id, text='ID : [' + str(db.q_id(update.message.chat_id)) + ']' +
+                                                             '\nمبحث : ' + result['lan'] +
+                                                             '\nموضوع : ' + result['subject'] +
+                                                             '\nمتن : ' + result['qtext'])
+        db.change_question('msgid', db.q_id(update.message.chat_id), s.message_id)
         return ConversationHandler.END
     else:
         update.message.reply_text('سوال های مشابه یافت شده\n'
@@ -267,6 +268,15 @@ def send(bot, update):
     return ConversationHandler.END
 
 
+def send_y(bot, update):
+    reply_keyboard = [['/ask']]
+    update.message.reply_text(reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                               resize_keyboard=True))
+    result = db.question_get(update.message.chat_id)
+    db.db['questions'].delete(id=result['id'])
+    return ConversationHandler.END
+
+
 def cancel2(bot, update):
     user = update.message.from_user
     reply_keyboard = [['/ask']]
@@ -293,7 +303,8 @@ conv_handler_question = ConversationHandler(
         history: [RegexHandler('^(ok)$', history),
                   RegexHandler('^(cancel)$', cancel2)],
 
-        send: [RegexHandler('^(سوال مورد نظرم یافت نشد)$', send),
+        send: [RegexHandler('^(خیر)$', send),
+               RegexHandler('^(بله)$', send_y),
                RegexHandler('^(cancel)$', cancel2)]
 
     },
