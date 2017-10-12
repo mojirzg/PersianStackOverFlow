@@ -170,6 +170,7 @@ def error(bot, update, error):
 def main():
     # Create the EventHandler and pass it your bot's token.
     TOKEN = config.token
+    PORT = int(os.environ.get('PORT', '5000'))
     updater = Updater(TOKEN)
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -191,7 +192,10 @@ def main():
     dp.add_error_handler(error)
 
     # Start the Bot
-    updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TOKEN)
+    updater.bot.set_webhook("https://persianstackoverflow.herokuapp.com/" + TOKEN)
 
     updater.idle()
 
