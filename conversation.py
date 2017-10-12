@@ -236,6 +236,7 @@ def history(bot, update):
                                                    '\nمبحث : ' + result['lan'] +
                                                    '\nموضوع : ' + result['subject'] +
                                                    '\nمتن : ' + result['qtext'])
+        return send
 
 
 def send(bot, update):
