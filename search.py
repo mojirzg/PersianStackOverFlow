@@ -7,7 +7,7 @@ def search(question, question_id):
     question = question  # question text
     q_id = []
     for column in table:
-        if fuzz.token_sort_ratio(column['qtext'], question) > 70:
+        if fuzz.token_sort_ratio(column['qtext'], question) > 50:
             if column['id'] != question_id and column['flag_answered']:
                 q_id.append(column['id'])
     print(q_id)
