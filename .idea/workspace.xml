@@ -137,11 +137,10 @@
       <file leaf-file-name="conversation.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/conversation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="64">
-              <caret line="267" column="0" lean-forward="false" selection-start-line="267" selection-start-column="0" selection-end-line="267" selection-end-column="0" />
+            <state relative-caret-position="1025">
+              <caret line="312" column="0" lean-forward="true" selection-start-line="312" selection-start-column="0" selection-end-line="312" selection-end-column="0" />
               <folding>
                 <element signature="e#0#22#0" expanded="true" />
-                <element signature="e#157#176#0" expanded="false" />
                 <element signature="e#207#1425#0" expanded="false" />
                 <element signature="e#301#729#0" expanded="false" />
                 <element signature="e#834#1150#0" expanded="false" />
@@ -157,8 +156,6 @@
                 <element signature="e#4515#4987#0" expanded="false" />
                 <element signature="e#5019#5452#0" expanded="false" />
                 <element signature="e#5553#5940#0" expanded="false" />
-                <element signature="e#5573#5661#0" expanded="false" />
-                <element signature="e#5677#5823#0" expanded="false" />
                 <element signature="e#5844#5932#0" expanded="false" />
                 <element signature="e#6066#6822#0" expanded="false" />
                 <element signature="e#6494#6822#0" expanded="false" />
@@ -650,7 +647,14 @@
       <option name="project" value="LOCAL" />
       <updated>1507827632208</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="bug fix 4">
+      <created>1507827847813</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1507827847813</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TodoView">
@@ -726,7 +730,8 @@
     <MESSAGE value="search in questions" />
     <MESSAGE value="bug fix 2" />
     <MESSAGE value="bug fix 3" />
-    <option name="LAST_COMMIT_MESSAGE" value="bug fix 3" />
+    <MESSAGE value="bug fix 4" />
+    <option name="LAST_COMMIT_MESSAGE" value="bug fix 4" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1206,11 +1211,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/conversation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="267" column="0" lean-forward="false" selection-start-line="267" selection-start-column="0" selection-end-line="267" selection-end-column="0" />
+        <state relative-caret-position="1025">
+          <caret line="312" column="0" lean-forward="true" selection-start-line="312" selection-start-column="0" selection-end-line="312" selection-end-column="0" />
           <folding>
             <element signature="e#0#22#0" expanded="true" />
-            <element signature="e#157#176#0" expanded="false" />
             <element signature="e#207#1425#0" expanded="false" />
             <element signature="e#301#729#0" expanded="false" />
             <element signature="e#834#1150#0" expanded="false" />
@@ -1226,8 +1230,6 @@
             <element signature="e#4515#4987#0" expanded="false" />
             <element signature="e#5019#5452#0" expanded="false" />
             <element signature="e#5553#5940#0" expanded="false" />
-            <element signature="e#5573#5661#0" expanded="false" />
-            <element signature="e#5677#5823#0" expanded="false" />
             <element signature="e#5844#5932#0" expanded="false" />
             <element signature="e#6066#6822#0" expanded="false" />
             <element signature="e#6494#6822#0" expanded="false" />

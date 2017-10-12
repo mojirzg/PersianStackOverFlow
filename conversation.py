@@ -307,11 +307,11 @@ conv_handler_question = ConversationHandler(
         history: [RegexHandler('^(ok)$', history),
                   RegexHandler('^(cancel)$', cancel2)],
 
-        send: [RegexHandler('$(خیر)^', send),
-               RegexHandler('$(بله)^', send_y),
+        send: [RegexHandler('^(بله)$', send),
+               RegexHandler('^(خیر)$', send_y),
                RegexHandler('^(cancel)$', cancel2)]
 
-    },
+        },
 
     fallbacks=[CommandHandler('cancel', cancel2)])
 # endregion
